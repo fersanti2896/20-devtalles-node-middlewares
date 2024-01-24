@@ -29,11 +29,15 @@ export class CategoryService {
 
     async getCategories( paginationDto: PaginationDto ) {
         const { page, limit } = paginationDto;
-        const categories = await CategoryModel.find()
-                                              .skip( page )
-                                              .limit( limit );
-
+    
         try {
+            const [ total, categories ] = await Promise.all([
+                CategoryModel.countDocuments(),
+                await CategoryModel.find()
+                                   .skip( page )
+                                   .limit( limit )
+            ]);  
+
             const categoriesArray = categories.map( category => ({
                 id: category.id,
                 name: category.name,
@@ -42,6 +46,11 @@ export class CategoryService {
             }));
 
             return {
+                page, 
+                limit,
+                total,
+                next: `/api/categories?page=${ page }&limit=${ limit }`,
+                prev: ( page - 1 > 0 ) ? `/api/categories?page=${ page-1 }&limit=${ limit }` : null,
                 categoriesArray
             }
         } catch (error) {
