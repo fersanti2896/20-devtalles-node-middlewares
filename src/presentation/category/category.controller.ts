@@ -4,7 +4,7 @@ import { CategoryService } from '../services';
 
 export class CategoryController {
     constructor(
-        public readonly categoryService: CategoryService
+        private readonly categoryService: CategoryService
     ) {}
 
     private handleError = ( error: unknown, res: Response ) => {
@@ -15,15 +15,19 @@ export class CategoryController {
         return res.status(500).json({ error: 'Internal Server Error' });
     }
 
-    createCategory = async( req: Request, res: Response ) => {
+    createCategory = ( req: Request, res: Response ) => {
         const [error, createCategoryDto] = CreateCategoryDto.create( req.body );
 
         if( error ) return res.status(400).json({ error });
 
-        res.json(createCategoryDto);
+        this.categoryService.createCategory( createCategoryDto!, req.body.user )
+                            .then( category => res.status(201).json( category ) )
+                            .catch( error => this.handleError( error, res ) );
     }
 
     getCategories = async( req: Request, res: Response ) => {
-        res.json('Get Categories');
+        this.categoryService.getCategories()
+                            .then( categories => res.status(200).json( categories ) )
+                            .catch( error => this.handleError( error, res ) );
     }
 }
